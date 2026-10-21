@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {makeBracket,rally,advance} from '../app/engine.ts';
+const ms=makeBracket('mixed',['A','B','C','D','E','F','G','H']);
+assert.equal(ms.length,7);assert.equal(ms.filter(m=>m.status==='ready').length,4);
+const m=ms[0];rally(m,1,'sideout');assert.equal(m.serving,1);assert.equal(m.server,1);assert.equal(m.sb,0);
+rally(m,1,'sideout');assert.equal(m.sb,1);rally(m,0,'sideout');assert.equal(m.server,2);assert.equal(m.serving,1);rally(m,0,'sideout');assert.equal(m.serving,0);assert.equal(m.server,1);
+Object.assign(m,m.history.pop());assert.equal(m.serving,1);assert.equal(m.server,2);
+m.winner='A';advance(ms,m);assert.equal(ms[4].a,'A');assert.equal(ms[4].status,'waiting');ms[1].winner='D';advance(ms,ms[1]);assert.equal(ms[4].b,'D');assert.equal(ms[4].status,'ready');
+const r=makeBracket('rally',['A','B'])[0];rally(r,1,'rally');assert.equal(r.sb,1);assert.equal(r.serving,1);rally(r,0,'rally');assert.equal(r.sa,1);assert.equal(r.serving,0);
+console.log('PASS: bracket generation, opening side-out, second server, side-out, undo, winner advancement, and rally scoring.');

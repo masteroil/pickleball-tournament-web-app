@@ -1,0 +1,6 @@
+export type Match = {id:string; category:string; round:number; index:number; a:string|null; b:string|null; sa:number; sb:number; serving:number; server:number; opening:boolean; court:number|null; status:string; history:any[]; winner?:string; signature?:string; signer?:string; signedAt?:string; umpire?:string};
+export function makeBracket(category:string, teams:string[]):Match[]{
+ const matches:Match[]=[];for(let r=0,size=teams.length/2;size>=1;r++,size/=2)for(let i=0;i<size;i++)matches.push({id:crypto.randomUUID(),category,round:r,index:i,a:r===0?teams[i*2]:null,b:r===0?teams[i*2+1]:null,sa:0,sb:0,serving:0,server:2,opening:true,court:null,status:r===0?'ready':'waiting',history:[]});return matches;
+}
+export function rally(m:Match, side:number, method:string){m.history.push({sa:m.sa,sb:m.sb,serving:m.serving,server:m.server,opening:m.opening});if(method==='rally'){side===0?m.sa++:m.sb++;m.serving=side;}else if(side===m.serving){side===0?m.sa++:m.sb++;}else if(m.server===1){m.server=2;}else{m.serving=1-m.serving;m.server=1;m.opening=false;}}
+export function advance(matches:Match[],m:Match){const next=matches.find(x=>x.category===m.category&&x.round===m.round+1&&x.index===Math.floor(m.index/2));if(next){if(m.index%2===0)next.a=m.winner!;else next.b=m.winner!;if(next.a&&next.b)next.status='ready';}}
