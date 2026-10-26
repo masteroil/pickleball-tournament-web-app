@@ -4,7 +4,7 @@ import ts from 'typescript';
 let row=null,user=null;
 globalThis.__testUser=()=>user;
 globalThis.__testEnv={DB:{prepare(sql){let args;return{bind(...a){args=a;return this},async first(){return row?{...row}:null},async run(){if(sql.startsWith('INSERT')){if(!row)row={payload:args[1],revision:0};return{meta:{changes:1}}}if(sql.startsWith('UPDATE')){if(row.revision!==args[2])return{meta:{changes:0}};row={payload:args[0],revision:row.revision+1};return{meta:{changes:1}}}throw Error(sql)}}}}};
-let source=fs.readFileSync('app/api/tournament/route.ts','utf8').replace("import { env } from 'cloudflare:workers';","const env=globalThis.__testEnv;").replace("import { getChatGPTUser } from '../../chatgpt-auth';","const getChatGPTUser=async()=>globalThis.__testUser();").replace("'../../engine'","'../app/engine.ts'");
+let source=fs.readFileSync('app/api/tournament/route.ts','utf8').replace("import { env } from 'cloudflare:workers';","const env=globalThis.__testEnv;").replace("import { getOrganizer } from '../../organizer-auth';","const getOrganizer=async()=>globalThis.__testUser();").replace("'../../engine'","'../app/engine.ts'");
 fs.mkdirSync('.sites-runtime',{recursive:true});
 fs.writeFileSync('.sites-runtime/test-route.mjs',ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText);
 const api=await import('../.sites-runtime/test-route.mjs');

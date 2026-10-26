@@ -7,8 +7,8 @@ Requires Node.js 22.13+ and pnpm. Run these commands from the project root (the 
 3. Create the database tables: `pnpm db:migrate`. Confirm if Wrangler prompts to apply migrations.
 4. Verify the table: `pnpm db:check`. A new database reports `tournament_count: 0`.
 5. Start: `pnpm dev`.
-6. Open `http://localhost:5173/signin-with-chatgpt?return_to=/` directly in your browser. This activates a local test organizer identity.
-7. Choose your six-digit umpire PIN and create the sample tournament.
+6. Open `http://localhost:5173` and select **Organizer login**. Use your Supabase email/password account. See `AUTH_SETUP.md` for first-time account and redirect setup.
+7. Once logged in as the authorized organizer, choose your six-digit umpire PIN and create the sample tournament. Existing tournament data is preserved.
 
 No preliminary build is required. The migration command and Vite share the same database ID and `.wrangler/state` storage directory. The local database is separate from the deployed website's database and does not need cloud credentials. Future starts only require `pnpm dev`; run `pnpm db:migrate` when new migrations are added.
 

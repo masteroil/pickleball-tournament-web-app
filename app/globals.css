@@ -4,3 +4,5 @@
 @media print{.sidebar,header,.pageheading,.pagefooter,.notice,.qrpanel button{display:none!important}.main{margin:0}.qrgrid{display:grid;grid-template-columns:repeat(3,1fr)}.qrpanel img{width:100%}.panel{break-inside:avoid}}
 
 .groupbadge{float:right;background:#edf3e8;color:#4b6e39;padding:3px 8px;border-radius:5px;font-size:10px}.editcategory{margin-top:10px}
+
+.authlinks{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:14px}
