@@ -24,3 +24,4 @@ export function rally(m:Match, side:number, method:string, format='doubles'){
  else{m.serving=1-m.serving;m.server=1;m.opening=false;}
 }
 export function advance(matches:Match[],m:Match){const next=matches.find(x=>x.category===m.category&&x.round===m.round+1&&x.index===Math.floor(m.index/2));if(next){if(m.index%2===0)next.a=m.winner!;else next.b=m.winner!;if(next.a&&next.b)next.status='ready';}}
+export function gameOver(m:{sa:number;sb:number},c:{target:number;winBy?:number}){return Math.max(m.sa,m.sb)>=c.target&&Math.abs(m.sa-m.sb)>=(c.winBy??2);}

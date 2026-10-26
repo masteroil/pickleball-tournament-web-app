@@ -4,7 +4,7 @@ import ts from 'typescript';
 let row=null,user=null;
 globalThis.__testUser=()=>user;
 globalThis.__testEnv={DB:{prepare(sql){let args;return{bind(...a){args=a;return this},async first(){return row?{...row}:null},async run(){if(sql.startsWith('INSERT')){if(!row)row={payload:args[1],revision:0};return{meta:{changes:1}}}if(sql.startsWith('UPDATE')){if(row.revision!==args[2])return{meta:{changes:0}};row={payload:args[0],revision:row.revision+1};return{meta:{changes:1}}}throw Error(sql)}}}}};
-let source=fs.readFileSync('app/api/tournament/route.ts','utf8').replace("import { env } from 'cloudflare:workers';","const env=globalThis.__testEnv;").replace("import { getOrganizer } from '../../organizer-auth';","const getOrganizer=async()=>globalThis.__testUser();").replace("'../../engine'","'../app/engine.ts'");
+let source=fs.readFileSync('app/api/tournament/route.ts','utf8').replace("import { env } from 'cloudflare:workers';","const env=globalThis.__testEnv;").replace("import { getOrganizer } from '../../organizer-auth';","const getOrganizer=async()=>globalThis.__testUser();").replace("'../../engine'","'../app/engine.ts'").replace("'../../mixed'","'../app/mixed.ts'");
 fs.mkdirSync('.sites-runtime',{recursive:true});
 fs.writeFileSync('.sites-runtime/test-route.mjs',ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText);
 const api=await import('../.sites-runtime/test-route.mjs');
@@ -47,3 +47,28 @@ assert.equal((await post({action:'rally',match:match.id,token,side:1,revision:ro
 data=await (await api.GET()).json();const scored=data.matches.find(m=>m.id===match.id);assert.equal(scored.serving,1);assert.equal(scored.server,1);assert.equal(scored.sb,0);
 user=null;assert.equal((await post({...changes,revision:row.revision})).status,403);
 console.log('PASS: 12-player singles, editable groups/names, stale edit rejection, edits locked after start, organizer-only editing, singles side-out.');
+
+// Deployment backfill preserves existing results and runs exactly once.
+let saved=JSON.parse(row.payload);const oldResults=saved.matches.filter(m=>m.status==='completed');
+saved.categories=saved.categories.filter(c=>c.competition!=='rotation');saved.matches=saved.matches.filter(m=>!m.scheduledCourt);row.payload=JSON.stringify(saved);
+const beforeSeed=row.revision;data=await (await api.GET()).json();assert.equal(row.revision,beforeSeed+1);await api.GET();assert.equal(row.revision,beforeSeed+1);
+assert.deepEqual(data.matches.filter(m=>m.status==='completed'),oldResults.map(({signature,signer,...m})=>m));
+const mixed=data.categories.find(c=>c.competition==='rotation');assert.equal(data.matches.filter(m=>m.category===mixed.id).length,33);
+user={userId:'test-owner'};
+let game=data.matches.find(m=>m.category===mixed.id&&m.round===0&&m.scheduledCourt===1);
+assert.equal((await post({action:'editCategory',category:mixed.id,name:'Bad edit',teams:'A\nB',method:'sideout',target:11,revision:row.revision})).status,400);
+assert.equal((await post({action:'assign',match:game.id,court:2})).status,400);
+// Free court 1 from the separate singles test without changing its result.
+saved=JSON.parse(row.payload);saved.matches.find(m=>m.status==='live'&&m.court===1).court=3;row.payload=JSON.stringify(saved);
+assert.equal((await post({action:'editMixed',category:mixed.id,teams:mixed.teams.join('\n').replace('Kit','Kit Updated'),revision:row.revision})).ok,true);
+assert.equal((await post({action:'assign',match:game.id,court:1})).ok,true);
+assert.equal((await post({action:'editMixed',category:mixed.id,teams:mixed.teams.join('\n'),revision:row.revision})).status,400);
+saved=JSON.parse(row.payload);let liveMixed=saved.matches.find(m=>m.id===game.id);liveMixed.sa=10;liveMixed.sb=10;liveMixed.serving=0;row.payload=JSON.stringify(saved);
+user=null;
+assert.equal((await post({action:'rally',match:game.id,token,side:0,revision:row.revision})).ok,true);
+assert.equal((await post({action:'rally',match:game.id,token,side:0,revision:row.revision})).status,400);
+assert.equal((await post({action:'finish',match:game.id,token,revision:row.revision,signer:'Kit Updated',signature:'data:image/png;base64,test'})).ok,true);
+assert.equal((await post({action:'finish',match:game.id,token,revision:row.revision,signer:'Kit Updated',signature:'data:image/png;base64,test'})).status,400);
+data=await (await api.GET()).json();game=data.matches.find(m=>m.id===game.id);assert.equal(game.sa,11);assert.equal(game.sb,10);assert.equal(game.signature,undefined);assert.equal(game.a,'Kit Updated & Aizem');
+assert.equal(data.matches.filter(m=>m.category===mixed.id&&m.round===1).every(m=>m.status==='waiting'),true);
+console.log('PASS: safe one-time import, mixed roster edit, prescribed court, signed 11–10 result, no double finish, no winner propagation and no early next round.');
