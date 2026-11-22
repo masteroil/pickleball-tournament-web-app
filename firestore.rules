@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{db}/documents {
+  function staff(t) {return request.auth != null && exists(/databases/$(db)/documents/tournaments/$(t)/staff/$(request.auth.uid)) && get(/databases/$(db)/documents/tournaments/$(t)/staff/$(request.auth.uid)).data.role in ['admin','referee'];}
+  function readable(t) {return get(/databases/$(db)/documents/tournaments/$(t)).data.visible == true || staff(t);}
+  match /tournaments/{t} {
+   allow get: if resource.data.visible || staff(t);
+   allow list: if resource.data.visible || (request.auth != null && resource.data.owner == request.auth.uid);
+   match /staff/{uid} {allow get: if request.auth != null && request.auth.uid == uid;}
+   match /events/{event} {
+    allow read: if readable(t);
+    match /audit/{id} {allow read: if staff(t);}
+    match /standings/{id} {allow read: if readable(t) && (resource.data.published || staff(t));}
+   }
+  }
+ }
+}

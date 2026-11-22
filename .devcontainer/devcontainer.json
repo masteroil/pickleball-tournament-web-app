@@ -1,0 +1,7 @@
+{
+  "name": "Umpire scoring demo",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "forwardPorts": [4173],
+  "portsAttributes": {"4173": {"label": "Live umpire scoring", "onAutoForward": "notify"}},
+  "postStartCommand": "nohup node preview.cjs > /tmp/umpire-scoring-preview.log 2>&1 < /dev/null &"
+}
