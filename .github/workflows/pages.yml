@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   publish:
-    if: github.ref == 'refs/heads/umpire-scoring-demo' && vars.VITE_FIREBASE_API_KEY != '' && vars.VITE_FIREBASE_APP_ID != ''
+    if: github.ref == 'refs/heads/umpire-scoring-demo'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -27,8 +27,8 @@ jobs:
       - run: npm test
       - run: node scripts/build-pages.mjs
         env:
-          VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
-          VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_API_KEY: AIzaSyBwO6uLL2E9BW4ku14C413qj_Wncoe2YlE
+          VITE_FIREBASE_APP_ID: 1:485000663659:web:76de55795ba9b2703f572e
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
