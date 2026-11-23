@@ -6,7 +6,7 @@ const base = '/pickleball-tournament-web-app/';
 for (const name of ['VITE_FIREBASE_API_KEY', 'VITE_FIREBASE_APP_ID']) {
   if (!process.env[name]) throw new Error('Missing GitHub repository variable ' + name);
 }
-if (!process.env.VITE_FIREBASE_APP_ID.startsWith('1:4850000663659:web:')) throw new Error('Use the Web App ID for ' + project);
+if (!process.env.VITE_FIREBASE_APP_ID.startsWith('1:485000663659:web:')) throw new Error('Use the Web App ID for ' + project);
 Object.assign(process.env, { VITE_FIREBASE_PROJECT_ID: project, VITE_FIREBASE_AUTH_DOMAIN: project + '.firebaseapp.com', VITE_USE_EMULATORS: 'false' });
 await build({base, build:{outDir:'dist-pages',emptyOutDir:true}, plugins:[{
   name:'pages-worker-path', enforce:'pre',
